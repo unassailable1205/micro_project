@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Smart Code Analyzer & CPU Simulator</title>
+<style>
+:root{--bg:#0b1020;--panel:#131b31;--panel2:#18233d;--text:#edf2ff;--muted:#a7b4d0;--accent:#7c9cff;--accent2:#50e3c2;--border:#2b3858;--warn:#ffd166}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:radial-gradient(circle at top right,#17264a 0,#0b1020 44%);color:var(--text);line-height:1.5}
+header{padding:30px max(22px,calc((100% - 1180px)/2)) 22px;border-bottom:1px solid var(--border);background:#0b1020cc}
+.eyebrow{color:var(--accent2);font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+h1{font-size:clamp(1.8rem,4vw,3rem);line-height:1.1;margin:9px 0 12px}header p{max-width:850px;color:var(--muted);margin:0}
+main{max-width:1180px;margin:26px auto;padding:0 20px 48px}.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:17px}.chip{border:1px solid var(--border);border-radius:999px;padding:5px 10px;font-size:.78rem;color:#dbe4ff;background:#111a30}
+.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px}.panel{background:linear-gradient(160deg,#17213a,#11182b);border:1px solid var(--border);border-radius:17px;padding:20px;box-shadow:0 12px 30px #0002;margin-bottom:18px}
+h2{font-size:1.15rem;margin:0 0 5px}h3{font-size:.96rem;margin:17px 0 7px}.sub{font-size:.87rem;color:var(--muted);margin:0 0 14px}
+label{display:block;font-size:.83rem;color:#d8e1fa;margin-bottom:7px}textarea,input,select{width:100%;background:#0b1223;border:1px solid #344364;border-radius:10px;padding:11px 12px;color:var(--text);font:inherit;outline:none}textarea{min-height:130px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.9rem}textarea:focus,input:focus,select:focus{border-color:var(--accent)}
+button{border:0;border-radius:10px;background:var(--accent);color:#081126;font-weight:800;padding:10px 15px;cursor:pointer;margin:8px 7px 0 0}button.secondary{background:#273653;color:var(--text);border:1px solid #3a4b70}button:hover{filter:brightness(1.08)}
+.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:14px}.stat{background:#0b1223;border:1px solid var(--border);border-radius:12px;padding:12px}.stat strong{display:block;font-size:1.25rem;color:var(--accent2)}.stat span{font-size:.75rem;color:var(--muted)}
+.output{background:#0a1120;border:1px solid var(--border);border-radius:11px;padding:12px;min-height:55px;overflow-wrap:anywhere}.token{display:inline-block;padding:5px 8px;margin:3px;border-radius:7px;background:#202e4b;border:1px solid #35496f;font-family:ui-monospace,monospace;font-size:.82rem}.token b{color:var(--accent2);font-size:.68rem;display:block}.good{color:var(--accent2)}.bad{color:#ff8f9b}.muted{color:var(--muted)}table{width:100%;border-collapse:collapse;font-size:.85rem}th,td{text-align:left;border-bottom:1px solid var(--border);padding:9px 7px}th{color:#b9c8ec;font-weight:700}code{color:#b7c8ff;background:#0b1223;padding:2px 5px;border-radius:4px}.state{display:inline-block;border:1px solid var(--border);border-radius:50%;padding:12px 15px;margin:5px;background:#182541}.state.active{background:#254c50;border-color:var(--accent2)}.bar{height:9px;border-radius:10px;background:#283653;overflow:hidden;margin-top:8px}.bar span{display:block;height:100%;width:0;background:var(--accent2);transition:width .3s}
+footer{text-align:center;color:var(--muted);font-size:.8rem;padding:20px;border-top:1px solid var(--border)}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.statgrid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">Integrated Academic Project · FLAT + COA + DAA</div>
+  <h1>Smart Code Analyzer<br>& CPU Execution Simulator</h1>
+  <p>A learning tool that tokenizes simple code using pattern rules, models instruction execution, and demonstrates algorithm analysis. Built around concepts from Modules 1–3 of FLAT, COA, and DAA.</p>
+  <div class="chips"><span class="chip">FLAT · Finite Automata & Regex</span><span class="chip">COA · CPU & Instruction Cycle</span><span class="chip">DAA · Complexity & Divide-and-Conquer</span></div>
+</header>
+<main>
+<div class="grid">
+<section>
+  <div class="panel">
+    <h2>1. Code Tokenizer</h2><p class="sub">FLAT: regular-expression patterns and finite-state-style token classification.</p>
+    <label for="source">Enter a small code snippet</label>
+    <textarea id="source" spellcheck="false">int total = 12 + value;
+if (total >= 10) {
+  total = total * 2;
+}</textarea>
+    <div class="row"><button id="analyze">Analyze tokens</button><button class="secondary" id="sample">Load sample</button></div>
+    <h3>Recognized tokens</h3><div id="tokens" class="output muted">Click “Analyze tokens” to see results.</div>
+    <div id="tokenSummary" class="statgrid"></div>
+    <p class="sub" style="margin-top:12px">This is an educational tokenizer, not a complete compiler. Unknown characters are marked as errors.</p>
+  </div>
+  <div class="panel">
+    <h2>2. Pattern Matcher</h2><p class="sub">FLAT: test a regular expression against an input string.</p>
+    <label for="pattern">Regular expression (without surrounding slashes)</label><input id="pattern" value="^[A-Za-z_][A-Za-z0-9_]*$"/>
+    <label for="testText" style="margin-top:10px">Input to test</label><input id="testText" value="student_name"/>
+    <div class="row"><button id="testPattern">Test pattern</button></div>
+    <div id="patternResult" class="output muted" style="margin-top:10px">Try a pattern and an input.</div>
+  </div>
+  <div class="panel">
+    <h2>3. Algorithm Complexity Lab</h2><p class="sub">DAA: compare linear search with binary search on sorted data.</p>
+    <label for="arrayInput">Numbers (comma-separated; binary search sorts a copy)</label><input id="arrayInput" value="14, 3, 8, 21, 5, 13, 2, 34, 9"/>
+    <label for="target" style="margin-top:10px">Target number</label><input id="target" type="number" value="13"/>
+    <div class="row"><button id="runSearch">Run comparison</button></div>
+    <div id="searchResult" class="output muted" style="margin-top:10px">Run to compare the number of comparisons.</div>
+  </div>
+</section>
+<section>
+  <div class="panel">
+    <h2>4. CPU Instruction Simulator</h2><p class="sub">COA: registers, arithmetic instructions, and fetch–decode–execute cycle.</p>
+    <p class="muted" style="font-size:.85rem">Supported instructions: <code>LOAD R1, 5</code>, <code>ADD R1, 3</code>, <code>SUB R1, 1</code>, <code>MUL R1, 2</code>, <code>STORE R1, result</code>. One instruction per line.</p>
+    <label for="program">Assembly-like program</label><textarea id="program" spellcheck="false" style="min-height:150px">LOAD R1, 5
+ADD R1, 3
+MUL R1, 2
+SUB R1, 4
+STORE R1, result</textarea>
+    <div class="row"><button id="runCpu">Run program</button><button class="secondary" id="resetCpu">Reset</button></div>
+    <div class="statgrid"><div class="stat"><strong id="cycles">0</strong><span>Instructions executed</span></div><div class="stat"><strong id="r1">0</strong><span>Register R1</span></div><div class="stat"><strong id="stored">—</strong><span>Stored result</span></div></div>
+    <h3>Execution trace</h3><div id="trace" class="output muted">Execution steps will appear here.</div>
+    <h3>Instruction cycle</h3><div class="row"><span id="fetch" class="state">Fetch</span><span id="decode" class="state">Decode</span><span id="execute" class="state">Execute</span></div>
+    <p class="sub" style="margin-top:10px">The simulator runs each instruction through fetch, decode, and execute phases. It models the concept, not real hardware timing.</p>
+  </div>
+  <div class="panel">
+    <h2>5. Divide-and-Conquer Demonstration</h2><p class="sub">DAA Module 2: merge sort splits a list, sorts each half, and merges the results.</p>
+    <label for="sortInput">Numbers to sort</label><input id="sortInput" value="38, 12, 27, 5, 19, 44, 2, 31"/>
+    <div class="row"><button id="sortButton">Run merge sort</button></div>
+    <div class="statgrid"><div class="stat"><strong id="sortComparisons">0</strong><span>Element comparisons</span></div><div class="stat"><strong>O(n log n)</strong><span>Time complexity</span></div><div class="stat"><strong>O(n)</strong><span>Extra space</span></div></div>
+    <h3>Result</h3><div id="sortResult" class="output muted">Sorted values will appear here.</div>
+    <h3>How it works</h3><div id="sortSteps" class="output muted">The split-and-merge steps will appear here.</div>
+  </div>
+  <div class="panel">
+    <h2>Subject mapping</h2>
+    <table><thead><tr><th>Subject</th><th>Concept used</th><th>Where demonstrated</th></tr></thead><tbody>
+      <tr><td>FLAT</td><td>Regex and token recognition</td><td>Tokenizer + Pattern Matcher</td></tr>
+      <tr><td>COA</td><td>Registers, instructions, instruction cycle</td><td>CPU Simulator</td></tr>
+      <tr><td>DAA</td><td>Complexity, searching, divide-and-conquer</td><td>Complexity Lab + Merge Sort</td></tr>
+    </tbody></table>
+  </div>
+</section>
+</div>
+</main>
+<footer>Smart Code Analyzer & CPU Execution Simulator · Student project prototype · Educational use</footer>
+<script>
+const $ = id => document.getElementById(id);
+const keywords = new Set(["int","float","double","char","if","else","while","for","return","void","bool","true","false"]);
+function tokenize(src){
+  const re = /\s+|\/\/[^\n]*|\d+(?:\.\d+)?|[A-Za-z_][A-Za-z0-9_]*|==|!=|<=|>=|\+\+|--|&&|\|\||[+\-*/%=<>!&|]|[(){}\[\],;.]|./g;
+  const out=[]; let m;
+  while((m=re.exec(src))!==null){const v=m[0];if(/^\s+$/.test(v)||v.startsWith("//"))continue;
+    let type="Unknown";
+    if(/^\d/.test(v))type="Number";
+    else if(/^[A-Za-z_]/.test(v))type=keywords.has(v)?"Keyword":"Identifier";
+    else if(/^(==|!=|<=|>=|\+\+|--|&&|\|\||[+\-*/%=<>!&|])$/.test(v))type="Operator";
+    else if(/^[(){}\[\],;.]$/.test(v))type="Delimiter";
+    out.push({v,type});
+  }return out;
+}
+$("analyze").onclick=()=>{const ts=tokenize($("source").value);$("tokens").innerHTML=ts.length?ts.map(t=>`<span class="token"><b>${t.type}</b>${escapeHtml(t.v)}</span>`).join(""):'<span class="muted">No tokens found.</span>';
+ const counts={};ts.forEach(t=>counts[t.type]=(counts[t.type]||0)+1);
+ $("tokenSummary").innerHTML=Object.entries(counts).map(([k,v])=>`<div class="stat"><strong>${v}</strong><span>${k}</span></div>`).join("")||"";};
+$("sample").onclick=()=>{$("source").value="int total = 12 + value;\nif (total >= 10) {\n  total = total * 2;\n}";$("analyze").click();};
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+$("testPattern").onclick=()=>{try{const re=new RegExp($("pattern").value);const ok=re.test($("testText").value);$("patternResult").innerHTML=`<span class="${ok?'good':'bad'}">${ok?'✓ Match found':'✗ No match'}</span><br><span class="muted">Pattern: /${escapeHtml($("pattern").value)}/ · Input: ${escapeHtml($("testText").value)}</span>`;}catch(e){$("patternResult").innerHTML=`<span class="bad">Invalid regular expression: ${escapeHtml(e.message)}</span>`;}};
+$("runSearch").onclick=()=>{const arr=$("arrayInput").value.split(",").map(x=>Number(x.trim()));const target=Number($("target").value);if(!arr.length||arr.some(Number.isNaN)){$("searchResult").textContent="Please enter valid comma-separated numbers.";return;}
+ let linear=-1,lc=0;for(let i=0;i<arr.length;i++){lc++;if(arr[i]===target){linear=i;break;}}
+ const sorted=[...arr].sort((a,b)=>a-b);let lo=0,hi=sorted.length-1,bc=0,bi=-1;while(lo<=hi){bc++;let mid=Math.floor((lo+hi)/2);if(sorted[mid]===target){bi=mid;break;}if(sorted[mid]<target)lo=mid+1;else hi=mid-1;}
+ $("searchResult").innerHTML=`<table><tr><th>Algorithm</th><th>Result</th><th>Comparisons</th><th>Complexity</th></tr><tr><td>Linear search</td><td>${linear<0?'Not found':`Index ${linear} in original list`}</td><td>${lc}</td><td>O(n)</td></tr><tr><td>Binary search</td><td>${bi<0?'Not found':`Position ${bi} in sorted list`}</td><td>${bc}</td><td>O(log n)</td></tr></table><p class="muted">Binary search uses a sorted copy. Comparison counts depend on the target and input order.</p>`;};
+function setPhase(active){["fetch","decode","execute"].forEach(id=>$(id).classList.toggle("active",id===active));}
+$("runCpu").onclick=()=>{let r={R1:0},stored="—",steps=[],lines=$("program").value.split(/\n/).map(x=>x.trim()).filter(Boolean);let error="";
+ for(let i=0;i<lines.length;i++){let line=lines[i],m=line.match(/^(LOAD|ADD|SUB|MUL|STORE)\s+(R1)(?:\s*,\s*(.+))?$/i);setPhase("fetch");if(!m){error=`Line ${i+1}: invalid instruction “${line}”`;break;}let op=m[1].toUpperCase(),arg=(m[3]||"").trim();setPhase("decode");
+  if(op!=="STORE"&&!arg){error=`Line ${i+1}: ${op} needs a value`;break;}
+  if(op==="LOAD"||op==="ADD"||op==="SUB"||op==="MUL"){let n=Number(arg);if(!Number.isFinite(n)){error=`Line ${i+1}: expected a numeric operand`;break;}setPhase("execute");if(op==="LOAD")r.R1=n;if(op==="ADD")r.R1+=n;if(op==="SUB")r.R1-=n;if(op==="MUL")r.R1*=n;steps.push(`${i+1}. ${line} → R1 = ${r.R1}`);}
+  else {if(!arg){error=`Line ${i+1}: STORE needs a result name`;break;}setPhase("execute");stored=`${arg} = ${r.R1}`;steps.push(`${i+1}. ${line} → ${stored}`);}
+ }
+ $("cycles").textContent=steps.length;$("r1").textContent=r.R1;$("stored").textContent=stored;
+ $("trace").innerHTML=(steps.length?steps.map(s=>`<div>${escapeHtml(s)}</div>`).join(""):"No instructions executed.")+(error?`<p class="bad">${escapeHtml(error)}</p>`:"");
+ if(!error)setPhase("execute");};
+$("resetCpu").onclick=()=>{$("cycles").textContent="0";$("r1").textContent="0";$("stored").textContent="—";$("trace").textContent="Execution steps will appear here." ;setPhase("");};
+$("sortButton").onclick=()=>{const a=$("sortInput").value.split(",").map(x=>Number(x.trim()));if(!a.length||a.some(Number.isNaN)){$("sortResult").textContent="Please enter valid comma-separated numbers.";return;}let comparisons=0,steps=[];
+ function mergeSort(arr,depth=0){if(arr.length<=1)return arr;let mid=Math.floor(arr.length/2);steps.push(`${"  ".repeat(depth)}Split [${arr.join(", ")}] → [${arr.slice(0,mid).join(", ")}] + [${arr.slice(mid).join(", ")}]`);let l=mergeSort(arr.slice(0,mid),depth+1),r=mergeSort(arr.slice(mid),depth+1),out=[],i=0,j=0;while(i<l.length&&j<r.length){comparisons++;if(l[i]<=r[j])out.push(l[i++]);else out.push(r[j++]);}out.push(...l.slice(i),...r.slice(j));steps.push(`${"  ".repeat(depth)}Merge → [${out.join(", ")}]`);return out;}
+ const sorted=mergeSort(a);$("sortComparisons").textContent=comparisons;$("sortResult").innerHTML=`<span class="good">[${sorted.join(", ")}]</span>`;$("sortSteps").innerHTML=steps.map(s=>`<div>${escapeHtml(s)}</div>`).join("");};
+$("analyze").click();$("testPattern").click();setPhase("");
+</script>
+</body>
+</html>
